@@ -5,11 +5,15 @@ class MessageList extends Component {
   render() {
     return(
 
-        <div className="message system">
-          <Message />
-        </div>
+        <main className="messages">
+          {
+            this.props.messages.map((currentMessage) =>{
+              return <Message message = {currentMessage} key={currentMessage.username} />
+            })
+          }
+        </main>
 
-    )
+    );
   }
 }
 export default MessageList;
