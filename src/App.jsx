@@ -10,9 +10,9 @@ constructor(props) {
   this.state = {
     currentUser: {name: "Bob"},
     messages:[
-    {username: "Bob", content: "Has anyone seen my marbles?",
+    {username: "Bob", content: "Has anyone seen my marbles?", id: 1
     },
-    {username: "Anonymous", content: "You lost them for good."}
+    {username: "Anonymous", content: "You lost them for good.", id: 2}
     ]
   }
 };
@@ -27,13 +27,18 @@ componentDidMount() {
   }, 3000);
 }
 
-render() {
-}
+  chatbarPost(event) {
+    if (event.key === 13) {
+      const chatMessage = {type: 'postMessage', username: this.state.currentUser.name, content: event.target.value};
+      chatMessage.push(event);
+      this.setState({})
+    }
+  }
   render() {
     return (
       <div>
         <Messagelist messages={this.state.messages} />
-        <Chatbar currentUser={this.state.currentUser} />
+        <Chatbar currentUser={this.state.currentUser} chatPost={this.chatbarPost.bind(this)} />
       </div>
     );
   }
