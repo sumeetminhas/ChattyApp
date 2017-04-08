@@ -52,7 +52,6 @@ wss.on('connection', (ws) => {
   isUserConnect(true);
 
   ws.on('message', (message) => {
-    console.log("NEW MESSAGE: " + message);
     let chatMessage = JSON.parse(message);
     chatMessage.id = uuid.v1();
     switch(chatMessage.type) {
