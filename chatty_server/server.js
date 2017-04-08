@@ -1,8 +1,12 @@
 const express = require('express');
-const SocketServer = require('ws');
+const SocketServer = require('ws').Server;
 const uuid = require('node-uuid');
 // Set the port to 3001
 const PORT = 3001;
+
+//keep track of connected users
+let connectedUsers = 0;
+const USERS =[];
 
 // Create a new express server
 const server = express()
@@ -11,42 +15,41 @@ const server = express()
   .listen(PORT, '0.0.0.0', 'localhost', () => console.log(`Listening on ${ PORT }`));
 
 // Create the WebSockets server
-const wss = new SocketServer.Server({ server });
+const wss = new SocketServer({ server });
 
 // Set up a callback that will run when a client connects to the server
 // When a client connects they are assigned a socket, represented by
 // the ws parameter in the callback.
-wss.broadcast = function broadcast(data) {
-  wss.clients.forEach((client) => {
-    if (client.readyState === SocketServer.OPEN) {
-      client.send(data);
-    }
+
+SocketServer.prototype.broadcast = function broadcast(data) {
+  this.clients.forEach(function each(client) {
+    client.send(JSON.stringify(data));
   });
 };
 
-function isUserConnect(connected, ws) {
+function isUserConnect(connected) {
+
   const newNotification = {};
   newNotification.id = uuid.v1();
   newNotification.type = 'incomingNotification';
   newNotification.content =  connected ? 'A user connected!' : 'A user disconnected!';
-  console.log(wss.broadcast);
-  ws.send(newNotification);
-}
+  console.log(newNotification);
+  wss.broadcast(newNotification);
 
-const sendUserCount = count => {
-  return {
-    type: 'count',
-    count: count
-  };
-};
-
-let count = 0;
+  //counting connected users
+  connected ? connectedUsers++ : connectedUsers--;
+  const usersOnline = {
+       type: 'usersOnline',
+       content: connectedUsers
+  }
+  wss.broadcast(usersOnline);
+} //function isUserconnect ends here
 
 wss.on('connection', (ws) => {
   console.log('Client connected');
-  // isUserConnect(true, ws);
-  count++;
-  broadcast(sendUserCount(count));
+
+  //counting connected users
+  isUserConnect(true);
 
   ws.on('message', (message) => {
     console.log("NEW MESSAGE: " + message);
@@ -60,8 +63,8 @@ wss.on('connection', (ws) => {
         chatMessage.type = 'incomingMessage';
         break;
     }
-    wss.broadcast(JSON.stringify(chatMessage));
+    wss.broadcast(chatMessage);
   });
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
-  ws.on('close', () => count--; broadcast(sendUserCount(count)); console.log('Client disconnected'));
+  ws.on('close', () => isUserConnect(false));
 });

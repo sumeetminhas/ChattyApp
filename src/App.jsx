@@ -12,7 +12,7 @@ constructor(props) {
     currentUser: {name: "Anonymous"},
     messages:[],
     notice:'',
-    usersCount: 0
+    usersOnline: ''
   }
   this.appendMessage = this.appendMessage.bind(this);
   this.postNotification = this.postNotification.bind(this);
@@ -24,24 +24,30 @@ componentDidMount() {
   this.socket = new WebSocket('ws://localhost:3001');
   this.socket.onopen = function() {
     console.log("Connected to server");
-    const that = this;
   };
   this.socket.onmessage = (messageEvent) => {
     const newMessage = JSON.parse(messageEvent.data);
-    if (newMessage.type === "incomingNotification") { //set up to generate the Notices that the user has changed name
-      this.setState({notice: newMessage.content});
+    switch (newMessage.type) {
+      case 'incomingNotification':
+        this.setState({notice: newMessage.content});
+        break;
+      case 'incomingMessage':
+        const allMessages = this.state.messages.concat(newMessage);
+        this.setState({messages: allMessages});
+        break;
+      case 'usersOnline':
+        this.setState({usersOnline: newMessage.content});
+        break;
+      default:
+        console.log('Unknown type', newMessage);
+        break;
     }
-    else { //runs when the user sends a message
-      const allMessages = this.state.messages.concat(newMessage);
-      this.setState({messages: allMessages});
-    }
-    case 'users'
   }
 }
 
 appendMessage(data) {
   let stateMessages = this.state.messages;
-  console.log(data);
+  // console.log(data);
   const chatMessage = {
     type: 'postMessage',
     username: data.username,
@@ -52,8 +58,6 @@ appendMessage(data) {
 }
 
 postNotification(content) {
-  console.log("state.CurrentUser.name = ",this.state.currentUser.name);
-  console.log(content.username);
   const new_username = content.username;
   if (this.state.currentUser.name !== new_username) {
 
@@ -74,7 +78,7 @@ postNotification(content) {
   render() {
     return (
       <div>
-        <Navbar usersCount={this.state.usersCount} />
+        <Navbar usersOnline={this.state.usersOnline} />
         <MessageList messages={this.state.messages} notice={this.state.notice} />
         <Chatbar currentUser={this.state.currentUser} appendMessage={this.appendMessage} postNotification={this.postNotification} />
       </div>
