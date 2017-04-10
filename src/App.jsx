@@ -11,7 +11,6 @@ constructor(props) {
   this.state = {
     currentUser: {name: "Anonymous"},
     messages:[],
-    notice:'',
     usersOnline: ''
   }
   this.appendMessage = this.appendMessage.bind(this);
@@ -29,7 +28,8 @@ componentDidMount() {
     const newMessage = JSON.parse(messageEvent.data);
     switch (newMessage.type) {
       case 'incomingNotification':
-        this.setState({notice: newMessage.content});
+        const allMessages = this.state.messages.concat(newMessages);
+        this.setState({messages: allMessages});
         break;
       case 'incomingMessage':
         const allMessages = this.state.messages.concat(newMessage);
@@ -47,13 +47,11 @@ componentDidMount() {
 
 appendMessage(data) {
   let stateMessages = this.state.messages;
-  // console.log(data);
   const chatMessage = {
     type: 'postMessage',
     username: data.username,
     content: data.content
   };
-  const messages = stateMessages.concat(chatMessage);
   this.socket.send(JSON.stringify(chatMessage));
 }
 
@@ -79,7 +77,7 @@ postNotification(content) {
     return (
       <div>
         <Navbar usersOnline={this.state.usersOnline} />
-        <MessageList messages={this.state.messages} notice={this.state.notice} />
+        <MessageList messages={this.state.messages} />
         <Chatbar currentUser={this.state.currentUser} appendMessage={this.appendMessage} postNotification={this.postNotification} />
       </div>
     )
